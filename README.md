@@ -2,7 +2,9 @@
 
 **GatherLite: Selected Only** is a lightweight, high-performance companion addon for [GatherLite](https://www.curseforge.com/wow/addons/gatherlite) on World of Warcraft Forever.
 
-Tired of opening your World Map only to find it completely cluttered with thousands of nodes from every profession? **GatherLite: Selected Only** adds a discreet toggle button right next to GatherLite's map button, allowing you to display **strictly the resources, fish, or route points you are currently tracking**.
+While GatherLite offers comprehensive tracking for all your gathering professions, isolating only the specific node you want to farm usually requires navigating through settings menus and manually toggling individual resources on and off.
+
+**GatherLite: Selected Only** streamlines your farming workflow by adding a convenient toggle button directly onto your World Map. It dynamically syncs with whatever resource, fish, or route you currently have selected in GatherLite's sidebar—instantly focusing your map only on what you are actively hunting, without altering your permanent tracking settings.
 
 ---
 
