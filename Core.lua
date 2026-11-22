@@ -56,6 +56,11 @@ function ns:TriggerRefresh()
             GatherLite:Trigger("settings:update")
         end
 
+        local fishing = _G.GatherLite and _G.GatherLite.plugins and _G.GatherLite.plugins.Fishing
+        if fishing and type(fishing.Refresh) == "function" then
+            fishing:Refresh()
+        end
+
         if ns.UpdateUI then
             ns:UpdateUI()
         end
@@ -437,12 +442,88 @@ local function SetupHooks()
         end
     end
 
+    -- Hook 6: GatherLite.plugins.Fishing:Refresh (Catch locations filtering)
     local fishing = GL.plugins and GL.plugins.Fishing
-    if fishing and type(fishing.Select) == "function" and not fishing._glso_Hooked then
-        fishing._glso_Hooked = true
-        hooksecurefunc(fishing, "Select", function()
-            ns:TriggerRefresh()
-        end)
+    if fishing then
+        if type(fishing.Select) == "function" and not fishing._glso_SelectHooked then
+            fishing._glso_SelectHooked = true
+            hooksecurefunc(fishing, "Select", function()
+                ns:TriggerRefresh()
+            end)
+        end
+
+        if type(fishing.Refresh) == "function" and not fishing._glso_Refresh then
+            fishing._glso_Refresh = fishing.Refresh
+            fishing.Refresh = function(self)
+                local isHideMap = ns:IsHideAllMapActive()
+                local isHideMini = ns:IsHideAllMiniActive()
+                local isWorldMapOn = ns:IsWorldMapFilterActive()
+                local isMiniOn = ns:IsMinimapFilterActive()
+
+                -- If no filters are active at all, run vanilla refresh
+                if not isHideMap and not isHideMini and not isWorldMapOn and not isMiniOn then
+                    return fishing._glso_Refresh(self)
+                end
+
+                -- Determine if any fish itemID is currently allowed
+                local allowed = ns:GetAllowedObjectIDs()
+                local hasAllowedFish = false
+                if self.object and self.object.itemID and allowed[self.object.itemID] then
+                    hasAllowedFish = true
+                elseif allowed and GL.db and GL.db.char and GL.db.char.fishItem and allowed[GL.db.char.fishItem] then
+                    hasAllowedFish = true
+                end
+
+                local allowWorld = true
+                if isHideMap then
+                    allowWorld = false
+                elseif isWorldMapOn then
+                    allowWorld = hasAllowedFish
+                end
+
+                local allowMini = true
+                if isHideMini then
+                    allowMini = false
+                elseif isMiniOn then
+                    allowMini = hasAllowedFish
+                end
+
+                -- If fishing is suppressed on both maps, clear pins and return immediately
+                if not allowWorld and not allowMini then
+                    self:ClearPins()
+                    return
+                end
+
+                -- Temporarily override tracking flags during refresh so only permitted maps get pins
+                local origGetTracking = GL.GetNodeTracking
+                GL.GetNodeTracking = function(caller, target, nodeType)
+                    if nodeType == "fishing" or nodeType == "fish" then
+                        if target == "worldmap" and not allowWorld then
+                            return false
+                        end
+                        if target == "minimap" and not allowMini then
+                            return false
+                        end
+                    end
+                    return origGetTracking(caller, target, nodeType)
+                end
+
+                -- If a fish was selected in self.object but is not allowed on worldmap, temporarily suppress
+                local savedObject = self.object
+                if not hasAllowedFish then
+                    self.object = nil
+                end
+
+                local ok, err = pcall(fishing._glso_Refresh, self)
+
+                self.object = savedObject
+                GL.GetNodeTracking = origGetTracking
+
+                if not ok and err then
+                    geterrorhandler()(err)
+                end
+            end
+        end
     end
 end
 
