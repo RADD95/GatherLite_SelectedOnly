@@ -1,60 +1,44 @@
 # GatherLite: Selected Only
 
-**GatherLite: Selected Only** is a lightweight, high-performance companion addon for [GatherLite](https://www.curseforge.com/wow/addons/gatherlite) on World of Warcraft Forever.
+A simple companion addon for **GatherLite** on World of Warcraft Forever.
 
-While GatherLite offers comprehensive tracking for all your gathering professions, isolating only the specific node you want to farm usually requires navigating through settings menus and manually toggling individual resources on and off.
+If you use GatherLite, you probably know how annoying it is when you just want to farm Copper or Peacebloom: you have to open the settings and uncheck dozens of nodes one by one.
 
-**GatherLite: Selected Only** streamlines your farming workflow by adding a convenient toggle button directly onto your World Map. It dynamically syncs with whatever resource, fish, or route you currently have selected in GatherLite's sidebar—instantly focusing your map only on what you are actively hunting, without altering your permanent tracking settings.
-
----
-
-## ✨ Features
-
-- 🎯 **Only Show What You Need:** Instantly filters out non-selected herbs, ores, and fish. When you select Copper Ore or Peacebloom in the GatherLite sidebar, only those nodes are shown.
-- ⚡ **Route & Fishing Plugin Integration:** Automatically detects nodes from active routes (`/gatherroutes`) and selected fish catches (`/gather` fishing).
-- 🧹 **Instant Clean Map (Hide-All Mode):** Shift + Left Click instantly hides all pins from the World Map without losing your settings—perfect for questing or reading zone geography.
-- 🚀 **High Performance & Zero Lag:** Fully optimized hooks designed to prevent FPS drops even while viewing or drawing paths with `/gatherroutes`.
-- 🗺️ **World Map & Minimap Control:** Control World Map filtering and Minimap filtering independently.
-- 🌐 **Localization:** Full native support for English (`enUS`, `enGB`) and Spanish (`esES`, `esMX`).
-- 🛡️ **Zero Modifications to GatherLite:** Safe, non-destructive hooks (`hooksecurefunc` and non-polluting wrappers) that will not break when GatherLite is updated.
+**GatherLite: Selected Only** fixes that. It adds a small button to your World Map that shows **only** what you currently picked in the GatherLite sidebar or your active route. Select what you want to farm, turn on the button, and the rest disappears.
 
 ---
 
-## 🎮 Controls & Shortcuts
+### What it does
 
-The addon adds a spyglass icon directly to the World Map header (next to the GatherLite button):
-
-| Action | Function |
-| :--- | :--- |
-| **Left Click** | Toggle **Selected Only** filter on the **World Map** |
-| **Right Click** | Toggle **Selected Only** filter on the **Minimap** |
-| **Shift + Left Click** | **Hide / Restore ALL pins** on the **World Map** |
-| **Shift + Right Click** | **Hide / Restore ALL pins** on the **Minimap** |
-| **Hover** | Displays active filter status and list of currently selected resources |
+- **Focus on what you need:** Select a resource or route in GatherLite, and only those pins will show on your map.
+- **Clean Map shortcut:** Shift + Left Click instantly hides all pins so you can actually see the map. Shift + Click again to bring them back.
+- **Minimap support:** Right-click the button to apply the same filter to your Minimap.
+- **Zero lag:** Runs smooth even with heavy routes open.
+- **Safe:** Doesn't edit any GatherLite files, so updates won't break it.
 
 ---
 
-## ⌨️ Slash Commands
+### Controls (World Map Button)
 
-You can also control the addon via `/glonly` or `/glselectedonly`:
-
-- `/glonly` : Toggle 'Selected Only' filter on the World Map.
-- `/glonly minimap` (or `/glonly mini`) : Toggle 'Selected Only' filter on the Minimap.
-- `/glonly hide` (or `/glonly hideall`) : Toggle Hide All pins on the World Map.
-- `/glonly hide mini` : Toggle Hide All pins on the Minimap.
-- `/glonly status` : Prints full diagnostic audit (active resources, allowed IDs, anchor status).
-- `/glonly reset` : Clears caches and forces a map pin refresh.
-- `/glonly help` : Lists all available commands.
+- **Left Click:** Toggle "Selected Only" on the World Map.
+- **Right Click:** Toggle "Selected Only" on the Minimap.
+- **Shift + Left Click:** Hide / Restore ALL pins on the World Map.
+- **Shift + Right Click:** Hide / Restore ALL pins on the Minimap.
+- **Hover:** Shows what resources are currently being tracked.
 
 ---
 
-## 📦 Requirements
+### Commands
+
+- `/glonly` : Toggle the map filter.
+- `/glonly mini` : Toggle the minimap filter.
+- `/glonly hide` : Hide all pins on the map.
+- `/glonly status` : Check active resources and addon status.
+- `/glonly help` : Show all commands.
+
+---
+
+### Requirements
 
 - **World of Warcraft:** WoW Forever
-- **Dependency:** [GatherLite](https://www.curseforge.com/wow/addons/gatherlite)
-
----
-
-## 📄 License
-
-Distributed under the MIT License. Free to use, modify, and distribute.
+- **Dependency:** GatherLite
