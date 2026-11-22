@@ -1,6 +1,6 @@
 # GatherLite: Selected Only
 
-**GatherLite: Selected Only** is a lightweight, high-performance companion addon for [GatherLite](https://www.curseforge.com/wow/addons/gatherlite) on World of Warcraft Classic / Vanilla / WoW Forever.
+**GatherLite: Selected Only** is a lightweight, high-performance companion addon for [GatherLite](https://www.curseforge.com/wow/addons/gatherlite) on World of Warcraft Forever.
 
 Tired of opening your World Map only to find it completely cluttered with thousands of nodes from every profession? **GatherLite: Selected Only** adds a discreet toggle button right next to GatherLite's map button, allowing you to display **strictly the resources, fish, or route points you are currently tracking**.
 
@@ -48,7 +48,7 @@ You can also control the addon via `/glonly` or `/glselectedonly`:
 
 ## 📦 Requirements
 
-- **World of Warcraft:** Classic / Vanilla / WoW Forever (Interface 16001 / 1.12+ / 1.14+)
+- **World of Warcraft:** WoW Forever
 - **Dependency:** [GatherLite](https://www.curseforge.com/wow/addons/gatherlite)
 
 ---
