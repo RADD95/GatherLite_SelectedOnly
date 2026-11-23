@@ -43,6 +43,84 @@ function ns:InvalidateCache()
     cachedSelectionCount = 0
 end
 
+-------------------------------------------------------------------------------
+-- OpenMap Instance Resolution & Zoom-Safe PlacePin Hook
+-------------------------------------------------------------------------------
+local function GetOpenMapInstance()
+    local GL = _G.GatherLite
+    if not GL then return nil end
+
+    local openMap = (GL.plugins and (GL.plugins.OpenMap or GL.plugins.openmap))
+        or (GL.modules and (GL.modules.OpenMap or GL.modules.openmap))
+        or GL.OpenMap
+    if openMap and type(openMap.PlacePin) == "function" then
+        return openMap
+    end
+
+    if debug and type(debug.getupvalue) == "function" then
+        local candidates = {
+            GL.SendVersionCheck,
+            GL.ModifyTooltip,
+            GL.RegisterSettingsLauncher,
+        }
+        for _, fn in ipairs(candidates) do
+            if type(fn) == "function" then
+                local i = 1
+                while true do
+                    local name, val = debug.getupvalue(fn, i)
+                    if not name then break end
+                    if type(val) == "table" and val.OpenMap and type(val.OpenMap.PlacePin) == "function" then
+                        return val.OpenMap
+                    end
+                    i = i + 1
+                end
+            end
+        end
+    end
+    return openMap
+end
+
+local function SetupOpenMapHooks()
+    local OpenMap = GetOpenMapInstance()
+    if not OpenMap then return end
+
+    if type(OpenMap.PlacePin) == "function" and not OpenMap._glso_PlacePin then
+        OpenMap._glso_PlacePin = OpenMap.PlacePin
+        OpenMap.PlacePin = function(self, node, rect, object, options)
+            if ns:IsHideAllMapActive() then
+                if self.pins and self.pins[node] and type(self.Release) == "function" then
+                    self:Release(node, self.pins[node])
+                end
+                return
+            end
+
+            if ns:IsWorldMapFilterActive() then
+                local allowed = ns:GetAllowedObjectIDs()
+                if not (node and node.object and allowed[node.object]) then
+                    if self.pins and self.pins[node] and type(self.Release) == "function" then
+                        self:Release(node, self.pins[node])
+                    end
+                    return
+                end
+            end
+
+            return OpenMap._glso_PlacePin(self, node, rect, object, options)
+        end
+    end
+
+    if type(OpenMap.Refill) == "function" and not OpenMap._glso_Refill then
+        OpenMap._glso_Refill = OpenMap.Refill
+        OpenMap.Refill = function(self, bounds, options, keepExisting)
+            inOpenMapRefill = true
+            local ok, err = pcall(OpenMap._glso_Refill, self, bounds, options, keepExisting)
+            inOpenMapRefill = false
+            if not ok and err then
+                geterrorhandler()(err)
+            end
+        end
+    end
+end
+
 -- Refresh with recursion guard & next-tick deferral (Adjustment #2)
 function ns:TriggerRefresh()
     if isRefreshing then return end
@@ -59,6 +137,15 @@ function ns:TriggerRefresh()
         local fishing = _G.GatherLite and _G.GatherLite.plugins and _G.GatherLite.plugins.Fishing
         if fishing and type(fishing.Refresh) == "function" then
             fishing:Refresh()
+        end
+
+        local openMap = GetOpenMapInstance()
+        if openMap then
+            SetupOpenMapHooks()
+            if type(openMap.Clear) == "function" then
+                openMap:Clear()
+            end
+            openMap.dirty = true
         end
 
         if ns.UpdateUI then
@@ -368,40 +455,48 @@ local function SetupHooks()
         end
     end
 
-    -- Hook 4: OpenMap:Refill & GatherLite:IsIgnored wrapper (Adjustment #1)
-    -- Wrap OpenMap:Refill to set inOpenMapRefill flag only during its execution
-    local function tryHookOpenMap(OpenMap)
-        if OpenMap and type(OpenMap.Refill) == "function" and not OpenMap._glso_Refill then
-            OpenMap._glso_Refill = OpenMap.Refill
-            OpenMap.Refill = function(self, bounds, options, keepExisting)
-                inOpenMapRefill = true
-                local ok, err = pcall(OpenMap._glso_Refill, self, bounds, options, keepExisting)
-                inOpenMapRefill = false
-                if not ok and err then
-                    geterrorhandler()(err)
-                end
-            end
-        end
-    end
+    -- Hook 4: OpenMap PlacePin & Refill (Zoom-safe filtering)
+    SetupOpenMapHooks()
 
-    local OpenMap = (GL.plugins and (GL.plugins.OpenMap or GL.plugins.openmap))
-        or (GL.modules and (GL.modules.OpenMap or GL.modules.openmap))
-        or GL.OpenMap
-    tryHookOpenMap(OpenMap)
-
-    -- Hook GatherLite:IsIgnored to filter ONLY when inOpenMapRefill is active (Adjustment #1)
+    -- Hook GatherLite:IsIgnored to filter for WorldMap and OpenMap at all zoom levels without affecting Settings
     if type(GL.IsIgnored) == "function" and not GL._glso_IsIgnored then
         GL._glso_IsIgnored = GL.IsIgnored
         GL.IsIgnored = function(self, objectID)
-            if inOpenMapRefill and (ns:IsHideAllMapActive() or ns:IsWorldMapFilterActive()) then
-                if ns:IsHideAllMapActive() then
-                    return true -- treat as ignored so OpenMap:Refill skips all nodes
-                end
-                local allowed = ns:GetAllowedObjectIDs()
-                if not allowed[objectID] then
-                    return true -- treat as ignored so OpenMap:Refill skips it
-                end
+            local stack = (debugstack and debugstack(2, 2, 0)) or ""
+
+            -- Never filter the settings menu or options checkboxes
+            if stack:find("settings%.lua") or stack:find("config%.lua") then
+                return GL._glso_IsIgnored(self, objectID)
             end
+
+            -- World Map & OpenMap context (worldmap.lua, openmap.lua, or inOpenMapRefill)
+            if inOpenMapRefill or stack:find("worldmap%.lua") or stack:find("openmap%.lua") then
+                if ns:IsHideAllMapActive() then
+                    return true -- treat as ignored -> hide
+                end
+                if ns:IsWorldMapFilterActive() then
+                    local allowed = ns:GetAllowedObjectIDs()
+                    if not allowed[objectID] then
+                        return true -- treat as ignored -> hide
+                    end
+                end
+                return GL._glso_IsIgnored(self, objectID)
+            end
+
+            -- Minimap context
+            if stack:find("minimap%.lua") then
+                if ns:IsHideAllMiniActive() then
+                    return true
+                end
+                if ns:IsMinimapFilterActive() then
+                    local allowed = ns:GetAllowedObjectIDs()
+                    if not allowed[objectID] then
+                        return true
+                    end
+                end
+                return GL._glso_IsIgnored(self, objectID)
+            end
+
             return GL._glso_IsIgnored(self, objectID)
         end
     end

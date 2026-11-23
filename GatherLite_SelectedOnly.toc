@@ -5,7 +5,7 @@
 ## Notes: Cleanly filters World Map and Minimap pins to display only currently selected resources, fish, or active route nodes in GatherLite. Includes instant hide-all toggle.
 ## Notes-esES: Filtra en el Mapa y Minimapa para mostrar únicamente los nodos de recursos, peces o rutas seleccionados en GatherLite. Incluye atajo para ocultar todos los pines.
 ## Notes-esMX: Filtra en el Mapa y Minimapa para mostrar únicamente los nodos de recursos, peces o rutas seleccionados en GatherLite. Incluye atajo para ocultar todos los pines.
-## Version: 1.1.0
+## Version: 1.1.1
 ## Dependencies: GatherLite
 ## SavedVariablesPerCharacter: GatherLiteSelectedOnlyDB
 ## X-Category: Map & Minimap, Professions
